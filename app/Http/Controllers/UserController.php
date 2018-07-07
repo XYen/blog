@@ -34,7 +34,10 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        return view('users.show',compact('user'));
+        $statuses = $user->statuses()
+                         ->orderBy('created_at','desc')
+                         ->paginate(30);
+        return view('users.show',compact('user','statuses'));
     }
 
     public function store(Request $request)
@@ -117,15 +120,14 @@ class UserController extends Controller
 
     public function confirmEmail($token)
     {
-        $user = User::where('activation_token',$token)->firstOrFail();
-
+        $user = User::where('activation_token', $token)->firstOrFail();
 
         $user->activated = true;
         $user->activation_token = null;
         $user->save();
 
         Auth::login($user);
-        session()->flash('success','恭喜你，激活成功！');
-        return redirect()->route('users.show',[$user]);
+        session()->flash('success', '恭喜你，激活成功！');
+        return redirect()->route('users.show', [$user]);
     }
 }
